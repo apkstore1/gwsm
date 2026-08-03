@@ -65,7 +65,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="h-16 justify-center px-4">
         <div className="flex items-center gap-2 overflow-hidden">
-          <div className="brand-stripe flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold text-primary-foreground">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold text-white" style={{ backgroundColor: '#2f6de3' }}>
             W
           </div>
           {!collapsed && (

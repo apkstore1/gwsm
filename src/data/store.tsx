@@ -36,6 +36,10 @@ type Settings = {
   autoProvision: boolean;
   twoFactor: boolean;
   weeklyDigest: boolean;
+  totalClients: number;
+  activeDomains: number;
+  totalUsers: number;
+  monthlyRevenue: number;
 };
 
 type Ctx = {
@@ -82,6 +86,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     autoProvision: true,
     twoFactor: true,
     weeklyDigest: false,
+    totalClients: 3,
+    activeDomains: 4,
+    totalUsers: 156,
+    monthlyRevenue: 18630,
   });
 
   const log = useCallback(

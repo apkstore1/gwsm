@@ -13,6 +13,7 @@ import {
 import { Building2, Globe, Users, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { organizations, users, domains, revenueData, activity } from "@/data/mock";
+import { useStore } from "@/data/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,19 +33,20 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-const metrics = [
-  { label: "Total clients", value: organizations.length.toString(), icon: Building2, delta: "+1 this month" },
-  { label: "Active domains", value: domains.length.toString(), icon: Globe, delta: "3 verified" },
-  {
-    label: "Total users",
-    value: organizations.reduce((n, o) => n + o.seats, 0).toString(),
-    icon: Users,
-    delta: "+14 seats",
-  },
-  { label: "Monthly revenue", value: "$18,630", icon: DollarSign, delta: "+8.1% MoM" },
-];
-
 function Dashboard() {
+  const { settings } = useStore();
+
+  const metrics = [
+    { label: "Total clients", value: settings.totalClients.toString(), icon: Building2, delta: "+1 this month" },
+    { label: "Active domains", value: settings.activeDomains.toString(), icon: Globe, delta: "3 verified" },
+    {
+      label: "Total users",
+      value: settings.totalUsers.toString(),
+      icon: Users,
+      delta: "+14 seats",
+    },
+    { label: "Monthly revenue", value: `$${settings.monthlyRevenue.toLocaleString()}`, icon: DollarSign, delta: "+8.1% MoM" },
+  ];
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <div>
