@@ -10,6 +10,15 @@ export default defineConfig({
   vite: {
     resolve: {
       tsconfigPaths: true,
+      alias: {
+        // Prevent database modules from being bundled in client
+      },
+    },
+    ssr: {
+      external: ['pg', 'drizzle-orm', 'better-auth'],
+    },
+    optimizeDeps: {
+      exclude: ['pg', 'drizzle-orm', 'better-auth'],
     },
   },
   tanstackStart: {

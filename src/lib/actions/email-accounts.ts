@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { email_accounts } from '@/lib/db/schema'
+import { emailAccounts } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 
@@ -9,8 +9,8 @@ export async function getEmailAccounts() {
   try {
     const result = await db
       .select()
-      .from(email_accounts)
-      .where(eq(email_accounts.userId, DEFAULT_USER_ID))
+      .from(emailAccounts)
+      .where(eq(emailAccounts.userId, DEFAULT_USER_ID))
     return result || []
   } catch (error) {
     console.error('[v0] Failed to fetch email accounts:', error)
@@ -32,7 +32,7 @@ export async function createEmailAccount(data: {
       createdAt: new Date(),
       updatedAt: new Date(),
     }
-    await db.insert(email_accounts).values(newAccount)
+    await db.insert(emailAccounts).values(newAccount)
     return newAccount
   } catch (error) {
     console.error('[v0] Failed to create email account:', error)
@@ -46,9 +46,9 @@ export async function updateEmailAccount(
 ) {
   try {
     await db
-      .update(email_accounts)
+      .update(emailAccounts)
       .set({ ...data, updatedAt: new Date() })
-      .where(and(eq(email_accounts.id, id), eq(email_accounts.userId, DEFAULT_USER_ID)))
+      .where(and(eq(emailAccounts.id, id), eq(emailAccounts.userId, DEFAULT_USER_ID)))
     return { success: true }
   } catch (error) {
     console.error('[v0] Failed to update email account:', error)
@@ -59,8 +59,8 @@ export async function updateEmailAccount(
 export async function deleteEmailAccount(id: string) {
   try {
     await db
-      .delete(email_accounts)
-      .where(and(eq(email_accounts.id, id), eq(email_accounts.userId, DEFAULT_USER_ID)))
+      .delete(emailAccounts)
+      .where(and(eq(emailAccounts.id, id), eq(emailAccounts.userId, DEFAULT_USER_ID)))
     return { success: true }
   } catch (error) {
     console.error('[v0] Failed to delete email account:', error)
