@@ -1,60 +1,71 @@
-"use server";
+import { db } from '@/lib/db'
+import { organizations } from '@/lib/db/schema'
+import { eq, and } from 'drizzle-orm'
+import { nanoid } from 'nanoid'
 
-import { db } from "@/lib/db";
-import { organizations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
-
-async function getUserId() {
-  return "default-user";
-}
+const DEFAULT_USER_ID = 'user-default-001'
 
 export async function getOrganizations() {
-  const userId = await getUserId();
-  return db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.userId, userId));
+  try {
+    const result = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.userId, DEFAULT_USER_ID))
+    return result || []
+  } catch (error) {
+    console.error('[v0] Failed to fetch organizations:', error)
+    return []
+  }
 }
 
 export async function createOrganization(data: {
-  name: string;
-  email: string;
-  seats?: number;
+  name: string
+  email: string
+  seats?: number
 }) {
-  const userId = await getUserId();
-  const id = nanoid();
-
-  await db.insert(organizations).values({
-    id,
-    userId,
-    name: data.name,
-    email: data.email,
-    seats: data.seats || 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-
-  return { id, ...data };
+  try {
+    const id = nanoid()
+    const newOrg = {
+      id,
+      userId: DEFAULT_USER_ID,
+      name: data.name,
+      email: data.email,
+      seats: data.seats || 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    await db.insert(organizations).values(newOrg)
+    return newOrg
+  } catch (error) {
+    console.error('[v0] Failed to create organization:', error)
+    throw error
+  }
 }
 
 export async function updateOrganization(
   id: string,
-  data: Partial<typeof organizations.$inferInsert>
+  data: { name?: string; email?: string; seats?: number }
 ) {
-  const userId = await getUserId();
-
-  await db
-    .update(organizations)
-    .set({ ...data, updatedAt: new Date() })
-    .where(eq(organizations.id, id));
-
-  return { id, ...data };
+  try {
+    await db
+      .update(organizations)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(organizations.id, id), eq(organizations.userId, DEFAULT_USER_ID)))
+    return { success: true }
+  } catch (error) {
+    console.error('[v0] Failed to update organization:', error)
+    throw error
+  }
 }
 
 export async function deleteOrganization(id: string) {
-  const userId = await getUserId();
-  await db
-    .delete(organizations)
-    .where(eq(organizations.id, id));
+  try {
+    await db
+      .delete(organizations)
+      .where(and(eq(organizations.id, id), eq(organizations.userId, DEFAULT_USER_ID)))
+    return { success: true }
+  } catch (error) {
+    console.error('[v0] Failed to delete organization:', error)
+    throw error
+  }
 }
