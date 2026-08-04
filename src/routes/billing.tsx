@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { organizations } from "@/data/mock";
+import { useStore } from "@/data/store";
 
 export const Route = createFileRoute("/billing")({
   head: () => ({
@@ -23,13 +24,14 @@ export const Route = createFileRoute("/billing")({
   component: Billing,
 });
 
-const plans = [
-  { name: "Starter", seat: "$6.00", storage: "30 GB", support: "Standard" },
-  { name: "Business", seat: "$12.00", storage: "2 TB", support: "Priority" },
-  { name: "Enterprise", seat: "$22.00", storage: "5 TB", support: "24/7 dedicated" },
-];
-
 function Billing() {
+  const { settings } = useStore();
+
+  const plans = [
+    { name: "Starter", seat: `$${settings.starterSeatPrice.toFixed(2)}`, storage: settings.starterStorage, support: settings.starterSupport },
+    { name: "Business", seat: `$${settings.businessSeatPrice.toFixed(2)}`, storage: settings.businessStorage, support: settings.businessSupport },
+    { name: "Enterprise", seat: `$${settings.enterpriseSeatPrice.toFixed(2)}`, storage: settings.enterpriseStorage, support: settings.enterpriseSupport },
+  ];
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <h1 className="text-2xl font-normal text-foreground">Billing</h1>
@@ -40,8 +42,8 @@ function Billing() {
             <CardTitle className="text-base font-medium">Account balance</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-3xl font-medium text-foreground">$4,820.00</p>
-            <p className="text-sm text-muted-foreground">Auto-recharge at $1,000</p>
+            <p className="text-3xl font-medium text-foreground">${settings.accountBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p className="text-sm text-muted-foreground">Auto-recharge at ${settings.autoRechargeAmount.toLocaleString()}</p>
             <Button className="rounded-full">Add funds</Button>
           </CardContent>
         </Card>

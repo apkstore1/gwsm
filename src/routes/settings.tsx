@@ -49,6 +49,30 @@ function SettingsPage() {
 
       <Card className="shadow-sm">
         <CardHeader>
+          <CardTitle className="text-base font-medium">Dashboard Metrics</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="tc">Total clients</Label>
+            <Input id="tc" type="number" value={form.totalClients} onChange={(e) => setForm({ ...form, totalClients: parseInt(e.target.value) || 0 })} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ad">Active domains</Label>
+            <Input id="ad" type="number" value={form.activeDomains} onChange={(e) => setForm({ ...form, activeDomains: parseInt(e.target.value) || 0 })} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tu">Total users</Label>
+            <Input id="tu" type="number" value={form.totalUsers} onChange={(e) => setForm({ ...form, totalUsers: parseInt(e.target.value) || 0 })} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="mr">Monthly revenue</Label>
+            <Input id="mr" type="number" value={form.monthlyRevenue} onChange={(e) => setForm({ ...form, monthlyRevenue: parseInt(e.target.value) || 0 })} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm">
+        <CardHeader>
           <CardTitle className="text-base font-medium">Preferences</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">

@@ -36,6 +36,21 @@ type Settings = {
   autoProvision: boolean;
   twoFactor: boolean;
   weeklyDigest: boolean;
+  totalClients: number;
+  activeDomains: number;
+  totalUsers: number;
+  monthlyRevenue: number;
+  accountBalance: number;
+  autoRechargeAmount: number;
+  starterSeatPrice: number;
+  businessSeatPrice: number;
+  enterpriseSeatPrice: number;
+  starterStorage: string;
+  businessStorage: string;
+  enterpriseStorage: string;
+  starterSupport: string;
+  businessSupport: string;
+  enterpriseSupport: string;
 };
 
 type Ctx = {
@@ -82,6 +97,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     autoProvision: true,
     twoFactor: true,
     weeklyDigest: false,
+    totalClients: 3,
+    activeDomains: 4,
+    totalUsers: 156,
+    monthlyRevenue: 18630,
+    accountBalance: 4820,
+    autoRechargeAmount: 1000,
+    starterSeatPrice: 6,
+    businessSeatPrice: 12,
+    enterpriseSeatPrice: 22,
+    starterStorage: "30 GB",
+    businessStorage: "2 TB",
+    enterpriseStorage: "5 TB",
+    starterSupport: "Standard",
+    businessSupport: "Priority",
+    enterpriseSupport: "24/7 dedicated",
   });
 
   const log = useCallback(

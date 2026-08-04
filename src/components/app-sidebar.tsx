@@ -12,6 +12,7 @@ import {
   Grid3x3,
   ShieldCheck,
   Sparkles,
+  Sliders,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,7 @@ const groups = [
       { title: "Audit Logs", url: "/audit-logs", icon: ScrollText, color: "text-brand-blue" },
       { title: "Billing", url: "/billing", icon: CreditCard, color: "text-brand-green" },
       { title: "AI Assistant", url: "/ai-assistant", icon: Sparkles, color: "text-brand-yellow" },
+      { title: "Manage Conf", url: "/manage-conf", icon: Sliders, color: "text-brand-blue" },
       { title: "Settings", url: "/settings", icon: Settings, color: "text-muted-foreground" },
     ],
   },
@@ -65,7 +67,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="h-16 justify-center px-4">
         <div className="flex items-center gap-2 overflow-hidden">
-          <div className="brand-stripe flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold text-primary-foreground">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-semibold text-white" style={{ backgroundColor: '#2f6de3' }}>
             W
           </div>
           {!collapsed && (

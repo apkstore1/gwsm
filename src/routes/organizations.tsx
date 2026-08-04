@@ -30,8 +30,8 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
 import { ConfirmDelete } from "@/components/confirm-delete";
-import { useStore } from "@/data/store";
-import type { Org } from "@/data/mock";
+import { useOrganizations } from "@/lib/hooks/useDatabase";
+import { nanoid } from "nanoid";
 
 export const Route = createFileRoute("/organizations")({
   head: () => ({
@@ -48,22 +48,16 @@ export const Route = createFileRoute("/organizations")({
   component: Organizations,
 });
 
-const planColor: Record<Org["plan"], string> = {
-  Starter: "bg-brand-yellow/20 text-warning-foreground",
-  Business: "bg-brand-blue/10 text-brand-blue",
-  Enterprise: "bg-brand-green/10 text-brand-green",
-};
-
 function Organizations() {
-  const { orgs, saveOrg, removeOrg, newId } = useStore();
+  const { data: orgs, loading, create, update, remove } = useOrganizations();
   const [query, setQuery] = useState("");
-  const [draft, setDraft] = useState<Org | null>(null);
+  const [draft, setDraft] = useState<any | null>(null);
 
   const filtered = orgs.filter((o) =>
-    `${o.name} ${o.admin}`.toLowerCase().includes(query.toLowerCase()),
+    `${o.name} ${o.email}`.toLowerCase().includes(query.toLowerCase()),
   );
 
-  const blank: Org = { id: newId(), name: "", admin: "", seats: 1, plan: "Starter", domains: 0 };
+  const blank = { id: nanoid(), name: "", email: "", seats: 1 };
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -106,15 +100,12 @@ function Organizations() {
               {filtered.map((o) => (
                 <TableRow key={o.id}>
                   <TableCell className="pl-6 font-medium text-foreground">{o.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{o.admin}</TableCell>
-                  <TableCell>{o.domains}</TableCell>
+                  <TableCell className="text-muted-foreground">{o.email}</TableCell>
+                  <TableCell>-</TableCell>
                   <TableCell>{o.seats}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className={`rounded-full font-normal ${planColor[o.plan]}`}
-                    >
-                      {o.plan}
+                    <Badge variant="secondary" className="rounded-full font-normal">
+                      Custom
                     </Badge>
                   </TableCell>
                   <TableCell className="pr-6 text-right">
@@ -127,14 +118,14 @@ function Organizations() {
                     >
                       <Pencil className="size-4" />
                     </Button>
-                    <ConfirmDelete label={o.name} onConfirm={() => removeOrg(o.id)} />
+                    <ConfirmDelete label={o.name} onConfirm={() => remove(o.id)} />
                   </TableCell>
                 </TableRow>
               ))}
               {filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                    No organizations match your search.
+                    {loading ? "Loading..." : "No organizations match your search."}
                   </TableCell>
                 </TableRow>
               )}
@@ -159,39 +150,21 @@ function Organizations() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="org-admin">Primary admin email</Label>
+                <Label htmlFor="org-email">Email</Label>
                 <Input
-                  id="org-admin"
-                  value={draft.admin}
-                  onChange={(e) => setDraft({ ...draft, admin: e.target.value })}
+                  id="org-email"
+                  value={draft.email}
+                  onChange={(e) => setDraft({ ...draft, email: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="org-seats">Seats</Label>
-                  <Input
-                    id="org-seats"
-                    type="number"
-                    value={draft.seats}
-                    onChange={(e) => setDraft({ ...draft, seats: Number(e.target.value) })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Billing tier</Label>
-                  <Select
-                    value={draft.plan}
-                    onValueChange={(v) => setDraft({ ...draft, plan: v as Org["plan"] })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Starter">Starter</SelectItem>
-                      <SelectItem value="Business">Business</SelectItem>
-                      <SelectItem value="Enterprise">Enterprise</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="org-seats">Seats</Label>
+                <Input
+                  id="org-seats"
+                  type="number"
+                  value={draft.seats}
+                  onChange={(e) => setDraft({ ...draft, seats: Number(e.target.value) })}
+                />
               </div>
             </div>
           )}
@@ -200,9 +173,15 @@ function Organizations() {
               Cancel
             </Button>
             <Button
-              disabled={!draft?.name || !draft?.admin}
-              onClick={() => {
-                if (draft) saveOrg(draft);
+              disabled={!draft?.name || !draft?.email}
+              onClick={async () => {
+                if (draft) {
+                  if (orgs.some((o) => o.id === draft.id)) {
+                    await update(draft.id, { name: draft.name, email: draft.email, seats: draft.seats });
+                  } else {
+                    await create({ name: draft.name, email: draft.email, seats: draft.seats });
+                  }
+                }
                 setDraft(null);
               }}
             >

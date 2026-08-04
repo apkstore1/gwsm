@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
 import { ConfirmDelete } from "@/components/confirm-delete";
-import { useStore } from "@/data/store";
-import type { EmailAccount } from "@/data/mock";
+import { useEmailAccounts } from "@/lib/hooks/useDatabase";
+import { nanoid } from "nanoid";
 
 export const Route = createFileRoute("/email-accounts")({
   head: () => ({
@@ -27,16 +27,12 @@ export const Route = createFileRoute("/email-accounts")({
 });
 
 function EmailAccounts() {
-  const { accounts, orgs, saveAccount, removeAccount, newId } = useStore();
-  const [draft, setDraft] = useState<EmailAccount | null>(null);
+  const { data: accounts, loading, create, update, remove } = useEmailAccounts();
+  const [draft, setDraft] = useState<any | null>(null);
 
-  const blank: EmailAccount = {
-    id: newId(),
+  const blank = {
+    id: nanoid(),
     address: "",
-    org: orgs[0]?.name ?? "",
-    type: "Mailbox",
-    quota: "30 GB",
-    used: "0 GB",
     status: "Active",
   };
 
@@ -71,13 +67,13 @@ function EmailAccounts() {
               {accounts.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell className="pl-6 font-medium text-foreground">{a.address}</TableCell>
-                  <TableCell className="text-muted-foreground">{a.org}</TableCell>
+                  <TableCell className="text-muted-foreground">-</TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="rounded-full bg-brand-blue/10 font-normal text-brand-blue">
-                      {a.type}
+                      Mailbox
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{a.used} / {a.quota}</TableCell>
+                  <TableCell className="text-muted-foreground">-</TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"
@@ -98,10 +94,17 @@ function EmailAccounts() {
                     >
                       <Pencil className="size-4" />
                     </Button>
-                    <ConfirmDelete label={a.address} onConfirm={() => removeAccount(a.id)} />
+                    <ConfirmDelete label={a.address} onConfirm={() => remove(a.id)} />
                   </TableCell>
                 </TableRow>
               ))}
+              {accounts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    {loading ? "Loading..." : "No accounts yet."}
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -118,45 +121,15 @@ function EmailAccounts() {
                 <Label htmlFor="addr">Email address</Label>
                 <Input id="addr" value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Organization</Label>
-                  <Select value={draft.org} onValueChange={(v) => setDraft({ ...draft, org: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {orgs.map((o) => (
-                        <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={draft.type} onValueChange={(v) => setDraft({ ...draft, type: v as EmailAccount["type"] })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Mailbox">Mailbox</SelectItem>
-                      <SelectItem value="Alias">Alias</SelectItem>
-                      <SelectItem value="Group">Group</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="quota">Quota</Label>
-                  <Input id="quota" value={draft.quota} onChange={(e) => setDraft({ ...draft, quota: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v as EmailAccount["status"] })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Suspended">Suspended</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
@@ -164,8 +137,14 @@ function EmailAccounts() {
             <Button variant="outline" onClick={() => setDraft(null)}>Cancel</Button>
             <Button
               disabled={!draft?.address}
-              onClick={() => {
-                if (draft) saveAccount(draft);
+              onClick={async () => {
+                if (draft) {
+                  if (accounts.some((a) => a.id === draft.id)) {
+                    await update(draft.id, { address: draft.address, status: draft.status });
+                  } else {
+                    await create({ address: draft.address, status: draft.status });
+                  }
+                }
                 setDraft(null);
               }}
             >

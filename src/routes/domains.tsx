@@ -30,8 +30,8 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
 import { ConfirmDelete } from "@/components/confirm-delete";
-import { useStore } from "@/data/store";
-import type { DomainRow } from "@/data/mock";
+import { useDomains, useOrganizations } from "@/lib/hooks/useDatabase";
+import { nanoid } from "nanoid";
 
 export const Route = createFileRoute("/domains")({
   head: () => ({
@@ -61,15 +61,16 @@ const mxRecords = [
 ];
 
 function Domains() {
-  const { domains, orgs, saveDomain, removeDomain, newId } = useStore();
-  const [draft, setDraft] = useState<DomainRow | null>(null);
+  const { data: domains, loading, create, update, remove } = useDomains();
+  const { data: orgs } = useOrganizations();
+  const [draft, setDraft] = useState<any | null>(null);
 
-  const blank: DomainRow = {
-    id: newId(),
-    domain: "",
+  const blank = {
+    id: nanoid(),
+    name: "",
     org: orgs[0]?.name ?? "",
     status: "Pending MX",
-    mailboxes: 0,
+    mailboxCount: 0,
   };
 
   return (
@@ -101,12 +102,12 @@ function Domains() {
             </TableHeader>
             <TableBody>
               {domains.map((d) => {
-                const s = statusStyles[d.status];
+                const s = statusStyles[d.status as keyof typeof statusStyles];
                 return (
                   <TableRow key={d.id}>
-                    <TableCell className="pl-6 font-medium text-foreground">{d.domain}</TableCell>
-                    <TableCell className="text-muted-foreground">{d.org}</TableCell>
-                    <TableCell>{d.mailboxes}</TableCell>
+                    <TableCell className="pl-6 font-medium text-foreground">{d.name}</TableCell>
+                    <TableCell className="text-muted-foreground">-</TableCell>
+                    <TableCell>{d.mailboxCount}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center gap-1.5 text-sm ${s.className}`}>
                         <s.icon className="size-4" />
@@ -117,17 +118,24 @@ function Domains() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label={`Edit ${d.domain}`}
+                        aria-label={`Edit ${d.name}`}
                         className="size-8 rounded-full text-brand-blue hover:bg-brand-blue/10"
                         onClick={() => setDraft(d)}
                       >
                         <Pencil className="size-4" />
                       </Button>
-                      <ConfirmDelete label={d.domain} onConfirm={() => removeDomain(d.id)} />
+                      <ConfirmDelete label={d.name} onConfirm={() => remove(d.id)} />
                     </TableCell>
                   </TableRow>
                 );
               })}
+              {domains.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                    {loading ? "Loading..." : "No domains yet."}
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -150,34 +158,16 @@ function Domains() {
                 <Input
                   id="dom"
                   placeholder="example.com"
-                  value={draft.domain}
-                  onChange={(e) => setDraft({ ...draft, domain: e.target.value })}
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Organization</Label>
-                  <Select
-                    value={draft.org}
-                    onValueChange={(v) => setDraft({ ...draft, org: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {orgs.map((o) => (
-                        <SelectItem key={o.id} value={o.name}>
-                          {o.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
                   <Label>DNS status</Label>
                   <Select
                     value={draft.status}
-                    onValueChange={(v) => setDraft({ ...draft, status: v as DomainRow["status"] })}
+                    onValueChange={(v) => setDraft({ ...draft, status: v })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -188,6 +178,16 @@ function Domains() {
                       <SelectItem value="Action needed">Action needed</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mailbox">Mailbox Count</Label>
+                  <Input
+                    id="mailbox"
+                    type="number"
+                    placeholder="0"
+                    value={draft.mailboxCount}
+                    onChange={(e) => setDraft({ ...draft, mailboxCount: parseInt(e.target.value) || 0 })}
+                  />
                 </div>
               </div>
               <div className="rounded-lg border bg-muted/40 p-3">
@@ -213,9 +213,15 @@ function Domains() {
               Cancel
             </Button>
             <Button
-              disabled={!draft?.domain}
-              onClick={() => {
-                if (draft) saveDomain(draft);
+              disabled={!draft?.name}
+              onClick={async () => {
+                if (draft) {
+                  if (domains.some((d) => d.id === draft.id)) {
+                    await update(draft.id, { name: draft.name, status: draft.status, mailboxCount: draft.mailboxCount });
+                  } else {
+                    await create({ name: draft.name, status: draft.status, mailboxCount: draft.mailboxCount });
+                  }
+                }
                 setDraft(null);
               }}
             >

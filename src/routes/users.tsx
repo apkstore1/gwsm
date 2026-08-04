@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -32,8 +31,8 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
 import { ConfirmDelete } from "@/components/confirm-delete";
-import { useStore } from "@/data/store";
-import type { UserRow } from "@/data/mock";
+import { useUsers } from "@/lib/hooks/useDatabase";
+import { nanoid } from "nanoid";
 
 export const Route = createFileRoute("/users")({
   head: () => ({
@@ -51,20 +50,17 @@ export const Route = createFileRoute("/users")({
 });
 
 function UsersPage() {
-  const { users, orgs, saveUser, removeUser, newId } = useStore();
+  const { data: users, loading, create, update, remove } = useUsers();
   const [orgFilter, setOrgFilter] = useState("all");
-  const [draft, setDraft] = useState<UserRow | null>(null);
+  const [draft, setDraft] = useState<any | null>(null);
 
-  const filtered = users.filter((u) => orgFilter === "all" || u.org === orgFilter);
+  const filtered = users; // No filtering by org since we're not tracking org in users table yet
 
-  const blank: UserRow = {
-    id: newId(),
+  const blank = {
+    id: nanoid(),
     name: "",
     email: "",
-    org: orgs[0]?.name ?? "",
-    license: "Starter",
     status: "Active",
-    storage: "0 GB",
   };
 
   return (
@@ -82,19 +78,6 @@ function UsersPage() {
       <Card className="shadow-sm">
         <CardHeader className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-base font-medium">Directory</CardTitle>
-          <Select value={orgFilter} onValueChange={setOrgFilter}>
-            <SelectTrigger className="w-56 rounded-full">
-              <SelectValue placeholder="Filter by organization" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All organizations</SelectItem>
-              {orgs.map((o) => (
-                <SelectItem key={o.id} value={o.name}>
-                  {o.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </CardHeader>
         <CardContent className="px-0">
           <Table>
@@ -102,9 +85,6 @@ function UsersPage() {
               <TableRow>
                 <TableHead className="pl-6">Name</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Organization</TableHead>
-                <TableHead>License</TableHead>
-                <TableHead>Storage</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="pr-6 text-right">Actions</TableHead>
               </TableRow>
@@ -116,9 +96,10 @@ function UsersPage() {
                     <div className="flex items-center gap-3">
                       <Avatar className="size-8">
                         <AvatarFallback className="bg-brand-blue/10 text-xs text-brand-blue">
-                          {u.name
+                          {(u.name || "U")
                             .split(" ")
-                            .map((p) => p[0])
+                            .slice(0, 2)
+                            .map((p: string) => p[0])
                             .join("")}
                         </AvatarFallback>
                       </Avatar>
@@ -126,9 +107,6 @@ function UsersPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.org}</TableCell>
-                  <TableCell>{u.license}</TableCell>
-                  <TableCell>{u.storage}</TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"
@@ -151,14 +129,14 @@ function UsersPage() {
                     >
                       <Pencil className="size-4" />
                     </Button>
-                    <ConfirmDelete label={u.email} onConfirm={() => removeUser(u.id)} />
+                    <ConfirmDelete label={u.name} onConfirm={() => remove(u.id)} />
                   </TableCell>
                 </TableRow>
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                    No users for this organization yet.
+                  <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
+                    {loading ? "Loading..." : "No users yet."}
                   </TableCell>
                 </TableRow>
               )}
@@ -192,50 +170,20 @@ function UsersPage() {
                   onChange={(e) => setDraft({ ...draft, email: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Organization</Label>
-                  <Select value={draft.org} onValueChange={(v) => setDraft({ ...draft, org: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {orgs.map((o) => (
-                        <SelectItem key={o.id} value={o.name}>
-                          {o.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>License</Label>
-                  <Select
-                    value={draft.license}
-                    onValueChange={(v) => setDraft({ ...draft, license: v as UserRow["license"] })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Starter">Starter</SelectItem>
-                      <SelectItem value="Business">Business</SelectItem>
-                      <SelectItem value="Enterprise">Enterprise</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <div>
-                  <div className="text-sm font-medium text-foreground">Account active</div>
-                  <p className="text-xs text-muted-foreground">Suspended users cannot sign in.</p>
-                </div>
-                <Switch
-                  checked={draft.status === "Active"}
-                  onCheckedChange={(c) =>
-                    setDraft({ ...draft, status: c ? "Active" : "Suspended" })
-                  }
-                />
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={draft.status}
+                  onValueChange={(v) => setDraft({ ...draft, status: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
@@ -245,8 +193,14 @@ function UsersPage() {
             </Button>
             <Button
               disabled={!draft?.name || !draft?.email}
-              onClick={() => {
-                if (draft) saveUser(draft);
+              onClick={async () => {
+                if (draft) {
+                  if (users.some((u) => u.id === draft.id)) {
+                    await update(draft.id, { name: draft.name, email: draft.email, status: draft.status });
+                  } else {
+                    await create({ name: draft.name, email: draft.email, status: draft.status });
+                  }
+                }
                 setDraft(null);
               }}
             >

@@ -17,6 +17,7 @@ import { Route as BillingRouteImport } from './routes/billing'
 import { Route as DomainsRouteImport } from './routes/domains'
 import { Route as EmailAccountsRouteImport } from './routes/email-accounts'
 import { Route as ForwardersRouteImport } from './routes/forwarders'
+import { Route as ManageConfRouteImport } from './routes/manage-conf'
 import { Route as OrganizationsRouteImport } from './routes/organizations'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -62,6 +63,11 @@ const ForwardersRoute = ForwardersRouteImport.update({
   path: '/forwarders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManageConfRoute = ManageConfRouteImport.update({
+  id: '/manage-conf',
+  path: '/manage-conf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrganizationsRoute = OrganizationsRouteImport.update({
   id: '/organizations',
   path: '/organizations',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof DomainsRoute
   '/email-accounts': typeof EmailAccountsRoute
   '/forwarders': typeof ForwardersRoute
+  '/manage-conf': typeof ManageConfRoute
   '/organizations': typeof OrganizationsRoute
   '/security': typeof SecurityRoute
   '/settings': typeof SettingsRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/domains': typeof DomainsRoute
   '/email-accounts': typeof EmailAccountsRoute
   '/forwarders': typeof ForwardersRoute
+  '/manage-conf': typeof ManageConfRoute
   '/organizations': typeof OrganizationsRoute
   '/security': typeof SecurityRoute
   '/settings': typeof SettingsRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/domains': typeof DomainsRoute
   '/email-accounts': typeof EmailAccountsRoute
   '/forwarders': typeof ForwardersRoute
+  '/manage-conf': typeof ManageConfRoute
   '/organizations': typeof OrganizationsRoute
   '/security': typeof SecurityRoute
   '/settings': typeof SettingsRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/email-accounts'
     | '/forwarders'
+    | '/manage-conf'
     | '/organizations'
     | '/security'
     | '/settings'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/email-accounts'
     | '/forwarders'
+    | '/manage-conf'
     | '/organizations'
     | '/security'
     | '/settings'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/email-accounts'
     | '/forwarders'
+    | '/manage-conf'
     | '/organizations'
     | '/security'
     | '/settings'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   DomainsRoute: typeof DomainsRoute
   EmailAccountsRoute: typeof EmailAccountsRoute
   ForwardersRoute: typeof ForwardersRoute
+  ManageConfRoute: typeof ManageConfRoute
   OrganizationsRoute: typeof OrganizationsRoute
   SecurityRoute: typeof SecurityRoute
   SettingsRoute: typeof SettingsRoute
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForwardersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/manage-conf': {
+      id: '/manage-conf'
+      path: '/manage-conf'
+      fullPath: '/manage-conf'
+      preLoaderRoute: typeof ManageConfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/organizations': {
       id: '/organizations'
       path: '/organizations'
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   DomainsRoute: DomainsRoute,
   EmailAccountsRoute: EmailAccountsRoute,
   ForwardersRoute: ForwardersRoute,
+  ManageConfRoute: ManageConfRoute,
   OrganizationsRoute: OrganizationsRoute,
   SecurityRoute: SecurityRoute,
   SettingsRoute: SettingsRoute,
@@ -292,3 +313,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
