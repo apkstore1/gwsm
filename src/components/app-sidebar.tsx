@@ -12,6 +12,7 @@ import {
   Grid3x3,
   ShieldCheck,
   Sparkles,
+  Sliders,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,7 @@ const groups = [
       { title: "Audit Logs", url: "/audit-logs", icon: ScrollText, color: "text-brand-blue" },
       { title: "Billing", url: "/billing", icon: CreditCard, color: "text-brand-green" },
       { title: "AI Assistant", url: "/ai-assistant", icon: Sparkles, color: "text-brand-yellow" },
+      { title: "Manage Conf", url: "/manage-conf", icon: Sliders, color: "text-brand-blue" },
       { title: "Settings", url: "/settings", icon: Settings, color: "text-muted-foreground" },
     ],
   },
