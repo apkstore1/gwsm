@@ -190,6 +190,16 @@ function Domains() {
                   </Select>
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="mailbox">Mailbox Count</Label>
+                <Input
+                  id="mailbox"
+                  type="number"
+                  placeholder="0"
+                  value={draft.mailboxes}
+                  onChange={(e) => setDraft({ ...draft, mailboxes: parseInt(e.target.value) || 0 })}
+                />
+              </div>
               <div className="rounded-lg border bg-muted/40 p-3">
                 <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Required MX records
